@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Assignment 1</title>
+    <script  src="https://threejs.org/build/three.js"></script>
+    <script  src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://threejs.org/examples/js/libs/dat.gui.min.js"></script>
+    <script  src= "https://threejs.org/examples/js/loaders/OBJLoader.js"> </script>
+    <script src= "https://threejs.org/examples/js/loaders/MTLLoader.js"> </script>
+
+
+    <script>
+       // Add your own Javascript code/methods here.
+       "use strict";
+      function mainFunction(){
+        
+        
+        let renderer = new THREE.WebGLRenderer( { antialias: true } );//let renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setPixelRatio( window.devicePixelRatio );
+
+        renderer.setClearColor (0x8888FF, 1);
+        document.body.appendChild( renderer.domElement );
+
+        //CREATE THE SCENE
+        let scene = new THREE.Scene();
+        
+        let aspect = window.innerWidth / window.innerHeight;
+        
+        //Set our texture path
+        let texture = new THREE.TextureLoader().load( "Green_grass.jpg");
+        
+        var material = new THREE.MeshStandardMaterial( { color : 0x115511, side: THREE.DoubleSide, map: texture } );
+        
+        //Build our plane to pur our objects on
+        var geometry = new THREE.PlaneGeometry( 20, 20, 32 );
+        
+        var plane = new THREE.Mesh( geometry, material );
+       
+        //lets rotate the plane so that it looks "normal" from the default viewing position.  We need to rotate
+        //-90 degrees over the x axis to get the orientation correct
+        plane.rotation.set(-Math.PI/2, 0, 0);
+        scene.add( plane );
+        
+        
+        
+        
+        
+        let camera = new THREE.PerspectiveCamera( 30, aspect, 1, 100 );
+        camera.position.x = 1;
+        camera.position.z = 8;
+        
+        //ADD A CAMERA TO THE SCENE
+        scene.add(camera);
+       
+        //Lets add some lighting!
+        let light = new THREE.AmbientLight(0xFFFFFF, 1);
+        camera.add(light);
+        
+        let cameraLight = new THREE.DirectionalLight(0xFFFFFF, 0.7);
+        camera.add(cameraLight);
+
+
+        let cameraControls = new THREE.OrbitControls( camera, renderer.domElement  );
+        
+        //Code from the professors slides.  He is simplifying the code below to load the two objects.  Here we should just call the functions,
+        //but not sure exactly how to make the calls.  Will have to see about this.
+        /*
+        let TreeInfo = {
+            mtlPathName : "./Sites",
+            objPathName : "./Sites",
+            texturePathName : "./Sites/maps",
+            mtlFileName : "tree_obj.mtl",
+            objFileName : "tree_obj.obj",
+            scale: 4,
+            rotation: -Math.PI/2,
+            translateVecotr: new THREE.Vector3(2,0,-1),
+            object: undefined
+        };
+        
+        function loadModel(objectInfo){
+            
+            let mtlLoader1 = new THREE.MTLLoader();
+            mtlLoader.setPath(objectInfo.mtlPathName);
+            mtlLoader.setTexturePath(objectInfo.texturePathName);
+        
+            let objLoader = new THREE.OBJLoader();
+            objLoader.setPath(objectInfo.objPathName);
+            mtlLoader.load(objectInfo.mtlFileName, onMtlLoad, showLoadProgress, onError);
+        
+        }
+        
+        function onObjLoad(object) {
+            
+             let bBox = new THREE.Box3().setFromObject(object);
+             let size = new THREE.Vector3();
+             bBox.getSize(size);
+             
+             let maxBaseSize = Math.max(size.x, size.z);
+             object.scale.multiplyScalar(1/maxBaseSize);
+             object.position.copy(objectInfo.translateVecotr);
+             
+             scene.add(object);
+             
+             return object;
+        }
+        
+        function onMtlLoad(mtl){
+            mtl.preload();
+            objLoader.SetMaterials(mtl);
+            objLoader.load(objectInfo.objFileName, onObjLoad, showLoadProgress, onError);
+        }
+        */
+        //Super Important to ensure that the object is rendered properly
+        let render = function ()
+        {
+            renderer.render( scene, camera );
+        };
+        
+        //THIS LOADS OUR TREE OBJECT
+        let mtlLoader1 = new THREE.MTLLoader();
+        mtlLoader1.setPath("./");
+        
+        mtlLoader1.load('tree_obj.mtl', function (mtl) {
+                       
+                       let objLoader1 = new THREE.OBJLoader();
+                       objLoader1.crossOrigin = '';
+                       objLoader1.setPath("./");
+                       objLoader1.setMaterials(mtl);
+                       
+                       objLoader1.load('tree_obj.obj', function (object){
+                                      
+                                       //the object is massive compared to the plane so we need to get it shrunk down to size
+                                       let bBox = new THREE.Box3().setFromObject(object);
+                                       
+                                       let size = new THREE.Vector3();
+                                       
+                                       bBox.getSize(size);
+                                       
+                                       let maxBaseSize = Math.max(size.x, size.z);
+                                       object.scale.multiplyScalar(4/maxBaseSize);
+                                       
+                                      //console.log(bBox);
+                                      //let center = bBox.min.clone();
+                                      //center.add(bBox.max).multiplyScalar(0.5);
+                                      //console.log(center);
+                                      //let diagonal = bBox.max.distanceTo(bBox.min);
+                                     // console.log(diagonal);
+                                      //camera.position.z = center.z + 1.5*diagonal;
+                                      //camera.lookAt(center);
+                                      //camera.far = diagonal*5;
+                                      //camera.updateProjectionMatrix();
+                                      //cameraControls.target = center;
+                                      //object.rotation
+                                      scene.add(object);
+                                      
+                                      //the lack of render on the object after loading it was creating the issue
+                                      render();
+                        })
+                       }
+                       );
+        
+        
+        //LETS LOAD THE SECOND OBJECT TO THE SCENE
+        let mtlLoader2 = new THREE.MTLLoader();
+        mtlLoader2.setPath("./");
+                       
+        mtlLoader2.load('Wooden_well.mtl', function (mtl) {
+        mtlLoader2.setTexturePath("./pbr");
+        
+        let objLoader2 = new THREE.OBJLoader();
+        objLoader2.crossOrigin = '';
+        objLoader2.setPath("./");
+        objLoader2.setMaterials(mtl);
+                                       
+        objLoader2.load('Wooden_well.obj', function (object){
+                                                       
+        //the object is massive compared to the plane so we need to get it shrunk down to size
+                            let bBox = new THREE.Box3().setFromObject(object);
+                                                       
+                            let size = new THREE.Vector3();
+                                                       
+                            bBox.getSize(size);
+                                                       
+                            let maxBaseSize = Math.max(size.x, size.z);
+                            object.scale.multiplyScalar(.5/maxBaseSize);
+                            object.position.set(1.5, 0, 1);
+                                                       //console.log(bBox);
+                                                       //let center = bBox.min.clone();
+                                                       //center.add(bBox.max).multiplyScalar(0.5);
+                                                       //console.log(center);
+                                                       //let diagonal = bBox.max.distanceTo(bBox.min);
+                                                       // console.log(diagonal);
+                                                       //camera.position.z = center.z + 1.5*diagonal;
+                                                       //camera.lookAt(center);
+                                                       //camera.far = diagonal*5;
+                                                       //camera.updateProjectionMatrix();
+                                                       //cameraControls.target = center;
+                                                       //object.rotation
+                            scene.add(object);
+                                                       
+                                                       //the lack of render on the object after loading it was creating the issue
+                            render();
+                })
+            }
+        );
+                                       
+    
+        cameraControls.addEventListener("change",render,false)
+        //Allows us to click on the object and resize it
+        let resize = function () {
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          render();
+        };
+
+        window.addEventListener("resize",resize, false)
+       
+        
+      }
+    </script>
+  </head>
+  <body onload="mainFunction();">
+  <h1>Jamison Rayfield J1227982 Assignment 2  </h1>
+  </body>
+</html>
